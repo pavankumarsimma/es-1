@@ -1,29 +1,35 @@
 from elasticsearch import Elasticsearch
 import json
 
+# Initialize Elasticsearch client with endpoint and API key
 es = Elasticsearch(
     "https://a01a6a959e654cdeb34630302869463f.us-central1.gcp.cloud.es.io",  # Elasticsearch endpoint
-    api_key="V1RSaURKQUJuLUVrbDRQTnRZVHc6X1k0N0pHejFUOE9lS1ktZmNEeVNfUQ==",
+    api_key="V1RSaURKQUJuLUVrbDRQTnRZVHc6X1k0N0pHejFUOE9lS1ktZmNEeVNfUQ==",  # API key
 )
+
+# Define the index name
 index_name = 'sample_doc_1'
 
+# Define the mapping for the index
 mapping = {
-    "mappings":{
-        "properties":{
-            "popularity": {"type": "integer"},
-            "ratings": {"type": "float"},
-            "reviews_count": {"type": "integer"},
-            "description": {"type": "text"},
-            "category": {"type": "keyword"}
+    "mappings": {
+        "properties": {
+            "popularity": {"type": "integer"},       # Integer field for popularity
+            "ratings": {"type": "float"},            # Float field for ratings
+            "reviews_count": {"type": "integer"},    # Integer field for reviews count
+            "description": {"type": "text"},         # Text field for description
+            "category": {"type": "keyword"}          # Keyword field for category
         }
     }
 }
 
+# Check if the index already exists
 if not es.indices.exists(index=index_name):
+    # Create the index with the specified mapping
     es.indices.create(index=index_name, body=mapping)
     print("NOTE: created index 'sample_doc_1'")
 
-    # Sample documents
+    # Sample documents to index
     documents = [
         {"popularity": 10, "ratings": 4.5, "reviews_count": 100, "description": "A great product", "category": "electronics"},
         {"popularity": 20, "ratings": 4.0, "reviews_count": 150, "description": "Good quality item", "category": "home"},
@@ -47,16 +53,18 @@ if not es.indices.exists(index=index_name):
         {"popularity": 1, "ratings": 4.2, "reviews_count": 35, "description": "Value for money", "category": "home"}
     ]
 
-    # Index the documents
+    # Index the sample documents
     for i, doc in enumerate(documents):
         es.index(index=index_name, document=doc)
 
+# Define multiple queries with size parameter to return 20 documents
 
 # Query 1: Match all documents
 query1 = {
     "query": {
         "match_all": {}
-    }
+    },
+    "size": 20  # Set size to 20
 }
 
 # Query 2: Match documents where the category is 'electronics'
@@ -65,7 +73,8 @@ query2 = {
         "match": {
             "category": "electronics"
         }
-    }
+    },
+    "size": 20  # Set size to 20
 }
 
 # Query 3: Range query on popularity (greater than 10)
@@ -76,7 +85,8 @@ query3 = {
                 "gt": 10
             }
         }
-    }
+    },
+    "size": 20  # Set size to 20
 }
 
 # Query 4: Full-text search on the description field
@@ -85,7 +95,8 @@ query4 = {
         "match": {
             "description": "great product"
         }
-    }
+    },
+    "size": 20  # Set size to 20
 }
 
 # Query 5: Boolean query combining multiple conditions
@@ -97,7 +108,8 @@ query5 = {
                 {"range": {"ratings": {"gte": 4.0}}}
             ]
         }
-    }
+    },
+    "size": 20  # Set size to 20
 }
 
 # Query 6: Custom ranking function based on multiple fields
@@ -121,10 +133,11 @@ query6 = {
                 }
             }
         }
-    }
+    },
+    "size": 20  # Set size to 20
 }
 
-# Query 7: Custom ranking function based on multiple fields asc order
+# Query 7: Custom ranking function with ascending order sort
 query7 = {
     "query": {
         "function_score": {
@@ -146,12 +159,13 @@ query7 = {
             }
         }
     },
-    "sort":{
-        "_score":"asc"
-    }
+    "sort": {
+        "_score": "asc"
+    },
+    "size": 20  # Set size to 20
 }
 
-# Query 8: same like query6 but if description contains the match "value for money" it gives boost of two for that particular funtion and sums it to the final score from the script
+# Query 8: Custom ranking function with boost for "value for money" in description
 query8 = {
     "query": {
         "function_score": {
@@ -183,39 +197,30 @@ query8 = {
                     }
                 }
             ],
-            "boost_mode": "sum" 
+            "boost_mode": "sum"
         }
     },
-    "size": 20
+    "size": 20  # Set size to 20
 }
 
 # Function to execute a query and print the results
 def execute_and_print(query):
     print("Query :")
-    print(json.dumps(query, indent=4))
-    res = es.search(index=index_name, body=query)
+    print(json.dumps(query, indent=4))  # Print the query in JSON format
+    res = es.search(index=index_name, body=query)  # Execute the query
     results = [{
         "_score": hit['_score'],
         "_source": hit['_source']
-    } for hit in res['hits']['hits']]
+    } for hit in res['hits']['hits']]  # Format the results
     print("Output :")
-    print(f"Total hits: {res['hits']['total']['value']}")
-    print(json.dumps(results, indent=4))
+    print(f"Total hits: {res['hits']['total']['value']}")  # Print total number of hits
+    print(json.dumps(results, indent=4))  # Print the results in JSON format
 
-
-# execute_and_print(query2)
-
-
-
-
+# List of queries to execute
 queries = [query1, query2, query3, query4, query5, query6, query7, query8]
-# queries = [query6, query8]
 
-
+# Execute and print results for each query
 for i, query in enumerate(queries, 1):
     print(f"Query {i} results:")
     execute_and_print(query)
     print("\n")
-
-
-
