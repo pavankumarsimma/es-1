@@ -2,8 +2,10 @@
 
 This repository contains a Python script for indexing sample documents into an Elasticsearch index and performing various queries to demonstrate the use of different querying techniques and custom scoring functions in Elasticsearch.
 
-### Code - sample1.py
-### Output - outputs.txt
+### FILES
+#### Code - sample1.py
+#### Output - outputs.txt
+#### Dependencies - requirements.txt
 
 ## Table of Contents
 - [Introduction](#introduction)
